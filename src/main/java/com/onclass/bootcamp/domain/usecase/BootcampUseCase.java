@@ -1,14 +1,22 @@
 package com.onclass.bootcamp.domain.usecase;
 
 import com.onclass.bootcamp.domain.api.BootcampServicePort;
+import com.onclass.bootcamp.domain.enums.ItemSortList;
+import com.onclass.bootcamp.domain.enums.OrderList;
 import com.onclass.bootcamp.domain.enums.TechnicalMessage;
 import com.onclass.bootcamp.domain.exceptions.EntityAlreadyExistException;
 import com.onclass.bootcamp.domain.model.Bootcamp;
+import com.onclass.bootcamp.domain.model.BootcampCapabilities;
+import com.onclass.bootcamp.domain.model.BootcampList;
+import com.onclass.bootcamp.domain.model.CapacityItem;
 import com.onclass.bootcamp.domain.spi.BootcampPersistencePort;
 import com.onclass.bootcamp.domain.spi.CapabilitiesGateway;
+import com.onclass.bootcamp.domain.utilities.CustomPage;
 import com.onclass.bootcamp.domain.validators.Validator;
 import lombok.AllArgsConstructor;
 import reactor.core.publisher.Mono;
+
+import java.util.*;
 
 @AllArgsConstructor
 public class BootcampUseCase implements BootcampServicePort {
@@ -30,5 +38,68 @@ public class BootcampUseCase implements BootcampServicePort {
                     )
                 )
             ).cast(Bootcamp.class);
+    }
+
+    @Override
+    public Mono<CustomPage<BootcampList>> listBootcamps(OrderList order, ItemSortList item, Integer page, Integer size) {
+        return switch (item){
+            case CAPABILITIES -> listBootcampsSortByCapabilities(order, page, size);
+            case NAME -> listBootcampsSortByName(order, page, size);
+        };
+    }
+
+    private Mono<CustomPage<BootcampList>> listBootcampsSortByCapabilities(OrderList order, Integer page, Integer size) {
+        return capabilitiesGateway.getSortCapabilitiesByBootcamps(order.getMessage(), size, page)
+            .flatMap(pageBootcamps -> {
+                List<Long> listIds = pageBootcamps.getData().stream().map(BootcampCapabilities::id).toList();
+                return bootcampPersistencePort.findAllByIds(listIds)
+                    .map( bootcamp -> enrichBootcampInfo(bootcamp,pageBootcamps.getData()))
+                    .collectSortedList(
+                        verifyOrder(order, Comparator.comparing(item -> item.capabilities().size()))
+                    )
+                    .map( listBootcampsComplete ->
+                        new CustomPage<BootcampList>(listBootcampsComplete, pageBootcamps)
+                    );
+            });
+    }
+
+    private Mono<CustomPage<BootcampList>> listBootcampsSortByName(OrderList order, Integer page, Integer size) {
+        return bootcampPersistencePort.findPaginatedAndSortByName(order.getMessage(), size, page)
+            .collectList()
+            .flatMap( listBootcamps -> {
+                if (listBootcamps.isEmpty()) {
+                    return Mono.just(Collections.checkedList(List.of(),BootcampList.class));
+                }
+                List<Long> listIds = listBootcamps.stream().map(Bootcamp::id).toList();
+                return capabilitiesGateway.getCapabilitiesByBootcampsIds(listIds)
+                    .map( bootcampsCapabilities ->
+                        listBootcamps.stream()
+                        .map( bootcamp -> enrichBootcampInfo(bootcamp, bootcampsCapabilities))
+                        .toList()
+                    );
+                }
+            ).zipWith(bootcampPersistencePort.countBootcamps())
+            .map(tuple ->
+                CustomPage.buildCustomPage(tuple.getT1(), page, size, tuple.getT2())
+            );
+    }
+
+    private BootcampList enrichBootcampInfo(Bootcamp bootcampBasic, List<BootcampCapabilities> bootcampCapabilities){
+        List< CapacityItem > capabilitiesBootcamp =  bootcampCapabilities.stream()
+                .filter(item -> Objects.equals(item.id(), bootcampBasic.id()))
+                .findFirst()
+                .map(BootcampCapabilities::capabilities)
+                .orElse(Collections.checkedList(List.of(),CapacityItem.class));
+        return new BootcampList(
+                bootcampBasic.id(),
+                bootcampBasic.name(),
+                bootcampBasic.description(),
+                bootcampBasic.startDate(),
+                bootcampBasic.duration(),
+                capabilitiesBootcamp);
+    }
+
+    private <T> Comparator<T> verifyOrder(OrderList order, Comparator<T> baseComparator){
+        return order.equals(OrderList.ASCENDANT)? baseComparator: baseComparator.reversed();
     }
 }

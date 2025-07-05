@@ -61,7 +61,7 @@ resilience4j:
         initialInterval: 500ms    # Intervalo inicial para el backoff
     instances:
       capabilityMngrRetry:
-        maxAttempts: 5
+        maxAttempts: 2
         waitDuration: 1000ms
         enableExponentialBackoff: true
         exponentialBackoffMultiplier: 1.5

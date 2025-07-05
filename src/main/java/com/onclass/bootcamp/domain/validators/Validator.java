@@ -74,7 +74,6 @@ public class Validator {
         return Mono.just(bootcamp);
     }
 
-
     public static <T> boolean isNullOrEmpty(T value){
         if (Objects.nonNull(value)){
             if (value instanceof String str) {
