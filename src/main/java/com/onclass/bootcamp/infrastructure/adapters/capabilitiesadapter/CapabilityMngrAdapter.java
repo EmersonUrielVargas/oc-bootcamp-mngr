@@ -3,11 +3,12 @@ package com.onclass.bootcamp.infrastructure.adapters.capabilitiesadapter;
 import com.onclass.bootcamp.domain.enums.TechnicalMessage;
 import com.onclass.bootcamp.domain.exceptions.BusinessException;
 import com.onclass.bootcamp.domain.exceptions.TechnicalException;
-import com.onclass.bootcamp.domain.model.BootcampCapabilities;
+import com.onclass.bootcamp.domain.model.spi.BootcampCapabilities;
 import com.onclass.bootcamp.domain.spi.CapabilitiesGateway;
 import com.onclass.bootcamp.domain.utilities.CustomPage;
 import com.onclass.bootcamp.infrastructure.adapters.capabilitiesadapter.dto.CapabilityMngrProperties;
 import com.onclass.bootcamp.infrastructure.adapters.capabilitiesadapter.dto.request.CapabilityAssign;
+import com.onclass.bootcamp.infrastructure.adapters.capabilitiesadapter.dto.response.ResponseDTO;
 import io.github.resilience4j.bulkhead.Bulkhead;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.reactor.retry.RetryOperator;
@@ -110,6 +111,30 @@ public class CapabilityMngrAdapter implements CapabilitiesGateway {
             .onStatus(HttpStatusCode::is5xxServerError, response -> buildErrorResponse(response, TechnicalMessage.ERROR_ASSIGN_CAPABILITIES))
             .bodyToMono(new ParameterizedTypeReference<CustomPage<BootcampCapabilities>>() {})
             .doOnNext(response -> log.info("Received API response : {}", response))
+            .transformDeferred(RetryOperator.of(retry))
+            .transformDeferred(mono ->
+                Mono.defer(() ->
+                    bulkhead.executeSupplier(() -> mono)
+                )
+            )
+            .doOnTerminate(() -> log.info("Completed getting capabilities in bootcamp"))
+            .doOnError(error -> log.error("Error occurred in capacity mngr: {}", error.getMessage()));
+    }
+
+    @Override
+    public Mono<Void> deleteCapabilitiesByBootcampId(Long bootcampId) {
+        log.info(LOG_START_DELETE_CAPABILITIES_BY_BOOTCAMP_ID, bootcampId);
+        return webClient.delete()
+            .uri(uriBuilder -> uriBuilder
+                .path(CAPABILITY_MNGR_PATH_DELETE_BY_BOOTCAMP)
+                .build(bootcampId))
+            .header(HttpHeaders.CONTENT_TYPE, "application/json")
+            .retrieve()
+            .onStatus(HttpStatusCode::is4xxClientError, response -> buildErrorResponse(response, TechnicalMessage.CAPABILITIES_NOT_FOUND))
+            .onStatus(HttpStatusCode::is5xxServerError, response -> buildErrorResponse(response, TechnicalMessage.ERROR_ASSIGN_CAPABILITIES))
+            .bodyToMono(ResponseDTO.class)
+            .doOnNext(response -> log.info("Received API response : {}", response))
+            .then()
             .transformDeferred(RetryOperator.of(retry))
             .transformDeferred(mono ->
                 Mono.defer(() ->

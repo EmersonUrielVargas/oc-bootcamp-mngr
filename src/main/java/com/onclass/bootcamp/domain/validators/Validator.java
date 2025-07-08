@@ -2,6 +2,7 @@ package com.onclass.bootcamp.domain.validators;
 
 import com.onclass.bootcamp.domain.constants.Constants;
 import com.onclass.bootcamp.domain.enums.TechnicalMessage;
+import com.onclass.bootcamp.domain.exceptions.BusinessException;
 import com.onclass.bootcamp.domain.exceptions.InvalidFormatParamException;
 import com.onclass.bootcamp.domain.exceptions.ParamRequiredMissingException;
 import com.onclass.bootcamp.domain.model.Bootcamp;
@@ -72,6 +73,13 @@ public class Validator {
             return Mono.error(new InvalidFormatParamException(TechnicalMessage.START_DATE_BOOTCAMP_NOT_ALLOWED));
         }
         return Mono.just(bootcamp);
+    }
+
+    public static Mono<Void> validationCondition(Boolean condition, TechnicalMessage technicalMessage) {
+        if (!condition) {
+            return Mono.error(new BusinessException(technicalMessage));
+        }
+        return Mono.empty();
     }
 
     public static <T> boolean isNullOrEmpty(T value){

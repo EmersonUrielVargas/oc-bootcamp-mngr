@@ -1,4 +1,4 @@
-package com.onclass.bootcamp.domain.model;
+package com.onclass.bootcamp.domain.model.spi;
 
 import java.time.LocalDate;
 import java.util.List;

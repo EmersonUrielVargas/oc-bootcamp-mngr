@@ -8,10 +8,12 @@ public class Constants {
     public final String LOG_START_ASSIGN_CAPABILITIES = "Starting assign capabilities {} in a bootcamp id: {}";
     public final String LOG_START_GET_CAPABILITIES_PAGINATION = "Starting get capabilities with parameters order: {}, page: {}, size: {}";
     public final String LOG_START_GET_CAPABILITIES_BY_BOOTCAMPS_IDS = "Starting get capabilities with bootcamps ids : {}";
+    public final String LOG_START_DELETE_CAPABILITIES_BY_BOOTCAMP_ID = "Starting delete capabilities with bootcamps id : {}";
 
 
     public final String CAPABILITY_MNGR_PATH_ASSIGN = "/assing";
     public final String CAPABILITY_MNGR_PATH_GET_BY_BOOTCAMPS = "/bootcamps";
+    public final String CAPABILITY_MNGR_PATH_DELETE_BY_BOOTCAMP = "/bootcamp/{id}";
 
     public final String QUERY_PARAM_ORDER_SORT = "sort";
     public final String QUERY_PARAM_PAGE = "page";

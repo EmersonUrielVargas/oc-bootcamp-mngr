@@ -29,7 +29,6 @@ public class BootcampPersistenceAdapter implements BootcampPersistencePort {
 
     @Override
     public Flux<Bootcamp> findPaginatedAndSortByName(String order, Integer size, Integer page) {
-        System.out.println("lega al repository "+ order + " size: "+size+" page: "+page);
         return bootcampRepository.findAndSortByName( page, size).map(bootcampEntityMapper::toModel);
     }
 
@@ -41,5 +40,15 @@ public class BootcampPersistenceAdapter implements BootcampPersistencePort {
     @Override
     public Mono<Long> countBootcamps() {
         return bootcampRepository.count();
+    }
+
+    @Override
+    public Mono<Bootcamp> findById(Long bootcampId) {
+        return bootcampRepository.findById(bootcampId).map(bootcampEntityMapper::toModel);
+    }
+
+    @Override
+    public Mono<Void> deleteBootcamp(Long bootcampId) {
+        return bootcampRepository.deleteById(bootcampId);
     }
 }
