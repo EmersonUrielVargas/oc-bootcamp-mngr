@@ -49,13 +49,13 @@ public class BootcampHandlerImpl {
                 });
     }
 
-     public Mono<ServerResponse> getAllBootcamps(ServerRequest request) {
+    public Mono<ServerResponse> getAllBootcamps(ServerRequest request) {
         String order = request.queryParam(Constants.QUERY_PARAM_ORDER_SORT).orElse(OrderList.ASCENDANT.getMessage());
         String itemToSort = request.queryParam(Constants.QUERY_PARAM_ITEM_SORT).orElse(ItemSortList.NAME.getMessage());
         Integer page = Integer.parseInt(request.queryParam(Constants.QUERY_PARAM_PAGE).orElse(Constants.DEFAULT_PAGE_PAGINATION));
         Integer size = Integer.parseInt(request.queryParam(Constants.QUERY_PARAM_SIZE).orElse(Constants.DEFAULT_SIZE_PAGINATION));
 
-        return bootcampServicePort.listBootcamps(OrderList.fromString(order),ItemSortList.fromString(itemToSort),page,size)
+        return bootcampServicePort.listBootcamps(OrderList.fromString(order.toUpperCase()),ItemSortList.fromString(itemToSort),page,size)
                 .flatMap(pageBootcamps -> ServerResponse
                         .status(HttpStatus.CREATED)
                         .bodyValue(pageBootcamps))
@@ -72,6 +72,28 @@ public class BootcampHandlerImpl {
                             HttpStatus.INTERNAL_SERVER_ERROR,
                             TechnicalMessage.INTERNAL_ERROR);
                 });
+    }
+
+    public Mono<ServerResponse> deleteBootcamp(ServerRequest request) {
+        String idParam = request.pathVariable(Constants.QUERY_PARAM_ID);
+        return bootcampServicePort.deleteBootcamp(Long.parseLong(idParam))
+            .map( bootcampMapper::toBasicBootcampDTO )
+            .flatMap(basicBootcampDTO -> ServerResponse
+                    .status(HttpStatus.OK)
+                    .bodyValue(basicBootcampDTO))
+            .doOnError(ex -> log.error(Constants.BOOTCAMP_ERROR, ex))
+            .onErrorResume(BusinessException.class, ex -> buildErrorResponse(
+                    HttpStatus.CONFLICT,
+                    ex.getTechnicalMessage()))
+            .onErrorResume(TechnicalException.class, ex -> buildErrorResponse(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    ex.getTechnicalMessage()))
+            .onErrorResume(ex -> {
+                log.error(Constants.UNEXPECTED_ERROR, ex);
+                return buildErrorResponse(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        TechnicalMessage.INTERNAL_ERROR);
+            });
     }
 
     private Mono<ServerResponse> buildErrorResponse(HttpStatus httpStatus, TechnicalMessage error) {

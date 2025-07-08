@@ -12,4 +12,6 @@ public interface BootcampPersistencePort {
     Flux<Bootcamp> findPaginatedAndSortByName(String order, Integer size, Integer page);
     Flux<Bootcamp> findAllByIds(List<Long> bootcampsIds);
     Mono<Long> countBootcamps();
+    Mono<Bootcamp> findById(Long bootcampId);
+    Mono<Void> deleteBootcamp(Long bootcampId);
 }

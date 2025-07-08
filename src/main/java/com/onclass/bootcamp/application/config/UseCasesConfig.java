@@ -10,6 +10,7 @@ import com.onclass.bootcamp.infrastructure.adapters.persistenceadapter.repositor
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.transaction.reactive.TransactionalOperator;
 
 @Configuration
 @RequiredArgsConstructor
@@ -23,7 +24,10 @@ public class UseCasesConfig {
         }
 
         @Bean
-        public BootcampServicePort bootcampServicePort(BootcampPersistencePort bootcampPersistencePort, CapabilitiesGateway capabilitiesGateway){
-                return new BootcampUseCase(bootcampPersistencePort, capabilitiesGateway);
+        public BootcampServicePort bootcampServicePort(
+                BootcampPersistencePort bootcampPersistencePort,
+                CapabilitiesGateway capabilitiesGateway,
+                TransactionalOperator transactionalOperator){
+                return new BootcampUseCase(bootcampPersistencePort, capabilitiesGateway, transactionalOperator);
         }
 }

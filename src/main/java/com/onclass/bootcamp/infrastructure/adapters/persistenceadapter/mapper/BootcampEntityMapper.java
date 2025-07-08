@@ -14,6 +14,7 @@ import org.mapstruct.ReportingPolicy;
 )
 public interface BootcampEntityMapper {
 
+    @Mapping(source = "id", target = "id")
     @Mapping(source = "name", target = "name")
     @Mapping(source = "description", target = "description")
     @Mapping(source = "startDate", target = "startDate")

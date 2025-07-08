@@ -18,11 +18,12 @@ public enum TechnicalMessage {
     BOOTCAMP_CREATED("201", "Bootcamp created successful", ""),
     BOOTCAMP_ALREADY_EXISTS("400","The bootcamp already exist." ,"" ),
     CAPABILITIES_NOT_FOUND("404","Some of the capabilities to be register were not found, please verify data" ,"" ),
+    BOOTCAMP_NOT_FOUND("404","The bootcamp to find were not found, please verify data" ,"" ),
     ERROR_ASSIGN_CAPABILITIES("500","Something went wrong with the capacity adapter, please try again" ,"" ),
-    LIST_CAPABILITIES_IS_TOO_SHORT("404","List of the capabilities must contain at least one" ,"" ),
-    LIST_CAPABILITIES_IS_TOO_LONG("404","List of the capabilities exceeds the allowed limit" ,"" ),
-    DURATION_BOOTCAMP_NOT_ALLOWED("404","The duration of bootcamp is not allowed" ,"" ),
-    START_DATE_BOOTCAMP_NOT_ALLOWED("404","The bootcamp start date is not allowed" ,"" ),
+    LIST_CAPABILITIES_IS_TOO_SHORT("409","List of the capabilities must contain at least one" ,"" ),
+    LIST_CAPABILITIES_IS_TOO_LONG("409","List of the capabilities exceeds the allowed limit" ,"" ),
+    DURATION_BOOTCAMP_NOT_ALLOWED("409","The duration of bootcamp is not allowed" ,"" ),
+    START_DATE_BOOTCAMP_NOT_ALLOWED("409","The bootcamp start date is not allowed" ,"" ),
     ERROR_CREATING_BOOTCAMP("500","An error occurred while creating the bootcamp" ,"" );
 
     private final String code;
